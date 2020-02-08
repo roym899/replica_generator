@@ -59,73 +59,73 @@ class Generator:
                 create_room(2.21, 1.98, 0.00, 3.43, 3.63, -0.31), #small table room
                 create_room(4.16, 0.07, 0.09, 2.96, -0.24, -0.17), #bathroom
                 create_room(4.25, -1.24, 0.52, 2.32, -3.73, -0.46) # workroom
-                ],
+            ],
             "apartment_1": [
                 create_room(-1.20, 0.42, 0.53, 0.40, 5.59, -0.22), # livingroom
                 create_room(2.76, 5.69, 0.49, 6.5, 4.1, -0.22) # meetingroom
-                ],
+            ],
             "apartment_2": [
                 create_room(-1.25, 1.03, 0.79, -0.09, -0.94, -0.26), # workroom
                 create_room(1.90, -0.76, 0.35, 5.84, 0.67, -0.50), # bedroom
                 create_room(5.69, 3.0, 0.38, 3.97, 4.08, -0.32), # livingroom
                 create_room(3.11, 5.86, 0.38, 5.35, 7.75, 0.04) # eatingroom
-                ], 
+            ], 
             "frl_apartment_0": [
                 create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
                 create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
                 create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+            ],
             "frl_apartment_1": [
-                create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
-                create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
-                create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+                create_room(-1.96, 0.09, -0.66, -0.79, 0.65, 0.46),
+                create_room(1.27, 0.56, 0.78, 3.74, 4.14, 0.04),
+                create_room(5.45, 4.85, 0.06, 7.45, 3.51, 0.53)
+            ],
             "frl_apartment_2": [
-                create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
-                create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
-                create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+                create_room(-2.1, 0.18, -0.11, -1.09, 0.58, 0.37),
+                create_room(1.51, 0.42, 0.37, 3.53, 4.10, 0.83),
+                create_room(4.98, 4.68, 0.71, 7.52, 3.21, 0.93)
+            ],
             "frl_apartment_3": [
-                create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
-                create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
-                create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+                create_room(-1.79, 0.19, 0.04, 0.20, 0.83, 0.60),
+                create_room(1.40, 0.72, 0.55, 4.27, 4.15, 0.90),
+                create_room(5.12, 4.69, 0.8, 7.36, 3.45, 0.15)
+            ],
             "frl_apartment_4": [
-                create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
-                create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
-                create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+                create_room(-0.07, 2.4, 0.04, 0.08, 0.74, 0.39),
+                create_room(0.61, -1.33, 0.55, 3.9, -3.68, -0.04),
+                create_room(5.06, -4.87, 0.4, 4.06, -7.39, -0.18)
+            ],
             "frl_apartment_5": [
-                create_room(0.55, -4.08, 0.31, 4.58, -1.98, -0.24),
-                create_room(4.89, -5.53, -0.31, 3.24, -7.87, 0.36),
-                create_room(0.019, 1.89, 0.77, 0.51, 0.45, -0.29)
-                ],
+                create_room(-2.19, 0.20, 0.57, 0.17, 0.71, -0.10),
+                create_room(1.2, 0.2, 0.57, 4.2, 3.97, 0.15),
+                create_room(5.51, 4.35, 0.37, 7.67, 3.04, 0.08)
+            ],
             "hotel_0": [
                 create_room(-1.56, -0.26, 1.08, 1.4, 0.95, 0.113),
                 create_room(2.64, 1.4, 1.0, 4.51, 0.98, -0.07),
                 create_room(4.71, -0.15, 0.90, 3.69, -0.65, 0.34)
-                ],
+            ],
             "office_0": [
                 create_room(-0.98, 0.36, 1.21, 0.85, -1.56, 0.27)
-                ],
+            ],
             "office_1": [
                 create_room(-0.12, -0.50, 1.37, 0.64, 0.93, 0.30)
-                ],
+            ],
             "office_2": [
                 create_room(-0.25, -0.76, 1.05, 0.11, 3.26, 0.44)
-                ],
+            ],
             "office_3": [
                 create_room(-1.32, -3.80, 1.13, -0.29, 1.14, 0.22)
-                ],
+            ],
             "office_4": [
                 create_room(0.24, 2.51, 1.40, 3.45, -0.71, 0.40)
-                ],
+            ],
             "room_0": [
                 create_room(0.0, 0.00, 0.51, 4.9, 2.03, 0.02)
-                ],
+            ],
             "room_1": [
                 create_room(0.26, 0.22, 0.98, -3.82, -0.19, -0.13)
-                ],
+            ],
             "room_2": [
                 create_room(0.75, -1.13, 0.02, 4.22, -0.33, -1.15)
             ]
@@ -154,7 +154,7 @@ class Generator:
         self.save_semantic_observation(observation, frame_number, out_folder)
         self.save_depth_observation(observation, frame_number, out_folder)
 
-    def generate(self, out_folder, frames_per_room=50):
+    def generate(self, out_folder, frames_per_room=10):
         """Generates dataset at specified path.
         
         Args:
@@ -172,7 +172,7 @@ class Generator:
         
         current_frame = 0
         
-        for scene in ['room_0']:
+        for scene in self._scenes:
             settings["scene"] = os.path.join(self._dataset_path, scene, "habitat", "mesh_semantic.ply")
             cfg = make_cfg(settings)
             simulator = habitat_sim.Simulator(cfg)
@@ -189,7 +189,7 @@ class Generator:
                     random_state.position[1] = np.random.uniform(room['z_min'], room['z_max'])
                     random_state.position[2] = - np.random.uniform(room['y_min'], room['y_max'])
                     random_state.rotation = (quat_from_angle_axis(np.random.uniform(0,np.pi), np.array([0,1,0]))*
-                                             quat_from_angle_axis(np.random.uniform(-np.pi/4,np.pi/4), np.array([1,0,0]))*
+                                             quat_from_angle_axis(np.random.uniform(-np.pi/3,np.pi/16), np.array([1,0,0]))*
                                              quat_from_angle_axis(np.random.uniform(-np.pi/16,np.pi/16), np.array([0,0,1])))
                     
                     agent_state.sensor_states = {}
