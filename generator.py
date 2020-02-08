@@ -7,11 +7,16 @@ import os
 
 import numpy as np
 from PIL import Image
-from settings import make_cfg
 
 import habitat_sim
 import habitat_sim.agent
 from habitat_sim.utils.common import d3_40_colors_rgb
+from habitat_sim.agent import AgentState
+from habitat_sim.utils.common import quat_from_angle_axis
+import quaternion
+
+from settings import make_cfg
+
 
 def create_room(x_1, y_1, z_1, x_2, y_2, z_2):
     x_min = min(x_1, x_2)
@@ -133,9 +138,8 @@ class Generator:
 
     def save_semantic_observation(self, observation, frame_number, out_folder):
         semantic_observation = observation["semantic_sensor"]
-        semantic_img = Image.new("P", (semantic_observation.shape[1], semantic_observation.shape[0]))
-        semantic_img.putpalette(d3_40_colors_rgb.flatten())
-        semantic_img.putdata((semantic_observation.flatten() % 40).astype(np.uint8))
+        semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
+        semantic_img.putdata((semantic_observation.flatten()))
         semantic_img.save(os.path.join(out_folder, "semantic_%05d.png" % frame_number))
 
     def save_depth_observation(self, observation, frame_number, out_folder):
@@ -150,7 +154,7 @@ class Generator:
         self.save_semantic_observation(observation, frame_number, out_folder)
         self.save_depth_observation(observation, frame_number, out_folder)
 
-    def generate(self, out_folder, frames_per_room=1):
+    def generate(self, out_folder, frames_per_room=50):
         """Generates dataset at specified path.
         
         Args:
@@ -160,23 +164,36 @@ class Generator:
         print(out_folder)
         settings['width'] = 320
         settings['height'] = 240
-        settings["sensor_height"] = 1.5
+        settings["sensor_height"] = 0
         settings["color_sensor"] = True
         settings["depth_sensor"] = True
         settings["semantic_sensor"] = True
         settings["silent"] = True
         
-        
         current_frame = 0
         
-        for scene in self._scenes:
+        for scene in ['room_0']:
             settings["scene"] = os.path.join(self._dataset_path, scene, "habitat", "mesh_semantic.ply")
             cfg = make_cfg(settings)
             simulator = habitat_sim.Simulator(cfg)
             
             for room in self._scene_to_rooms[scene]:
                 for _ in range(0,frames_per_room):
-                    # TODO: randomize position
+                    agent = simulator.get_agent(0)
+                    agent_state = agent.get_state()
+                    random_state = AgentState()
+                    
+                    # this looks weird because coordinates have been collected in replica viewer,
+                    # which uses a different coordinate system than habitat-sim
+                    random_state.position[0] = np.random.uniform(room['x_min'], room['x_max'])
+                    random_state.position[1] = np.random.uniform(room['z_min'], room['z_max'])
+                    random_state.position[2] = - np.random.uniform(room['y_min'], room['y_max'])
+                    random_state.rotation = (quat_from_angle_axis(np.random.uniform(0,np.pi), np.array([0,1,0]))*
+                                             quat_from_angle_axis(np.random.uniform(-np.pi/4,np.pi/4), np.array([1,0,0]))*
+                                             quat_from_angle_axis(np.random.uniform(-np.pi/16,np.pi/16), np.array([0,0,1])))
+                    
+                    agent_state.sensor_states = {}
+                    agent.set_state(random_state)
                     
                     # do the actual rendering
                     observations = simulator.get_sensor_observations()
