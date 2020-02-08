@@ -13,6 +13,7 @@ import habitat_sim.agent
 from habitat_sim.utils.common import d3_40_colors_rgb
 from habitat_sim.agent import AgentState
 from habitat_sim.utils.common import quat_from_angle_axis
+from habitat_sim.logging import logger
 import quaternion
 
 from settings import make_cfg
@@ -154,7 +155,7 @@ class Generator:
         self.save_semantic_observation(observation, frame_number, out_folder)
         self.save_depth_observation(observation, frame_number, out_folder)
 
-    def generate(self, out_folder, frames_per_room=10):
+    def generate(self, out_folder, frames_per_room=100):
         """Generates dataset at specified path.
         
         Args:
@@ -171,6 +172,11 @@ class Generator:
         settings["silent"] = True
         
         current_frame = 0
+        total_frames = 0
+        for scene in self._scenes:
+            for room in self._scene_to_rooms[scene]:
+                total_frames += frames_per_room
+                
         
         for scene in self._scenes:
             settings["scene"] = os.path.join(self._dataset_path, scene, "habitat", "mesh_semantic.ply")
@@ -199,6 +205,8 @@ class Generator:
                     observations = simulator.get_sensor_observations()
                     
                     self.save_observations(observations, current_frame, out_folder)
+                    
+                    print(f'Saved image {current_frame+1}/{total_frames}')
                     current_frame += 1
                     
             simulator.close()
