@@ -254,7 +254,7 @@ class Generator:
             xs, ys = np.nonzero(mask)
             minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
             
-            if label != 0: # == 0 would be undefined -> no annotation
+            if label > 0: # == 0 would be undefined -> no annotation
                 panoptic_dict['annotations'][-1]['segments_info'].append({
                     'id': int(id), # the number in the semantic image
                     'category_id': int(label), # the matching category id 
