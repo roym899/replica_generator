@@ -3,6 +3,8 @@
 """
 
 import argparse
+import datetime
+import json
 import os
 
 import numpy as np
@@ -18,6 +20,21 @@ import quaternion
 
 from settings import make_cfg
 
+def create_panoptic_dict():
+    panoptic_dict = {}
+    now = datetime.datetime.now()
+    panoptic_dict['info'] = {'description': 'Replica Generated Dataset',
+                             'url': 'https://github.com/roym899/replica_generator', 
+                             'version': '1.0', 
+                             'year': now.year, 
+                             'contributor': '', 
+                             'date_created': now.strftime('%Y-%m-%d %H:%M:%S.0')}
+    
+    panoptic_dict['licenses'] = [] # TODO?
+    panoptic_dict['images'] = []
+    panoptic_dict['annotations'] = []
+    panoptic_dict['categories'] = []
+    return panoptic_dict
 
 def create_room(x_1, y_1, z_1, x_2, y_2, z_2):
     x_min = min(x_1, x_2)
@@ -139,7 +156,7 @@ class Generator:
             os.makedirs(out_folder)
         color_observation = observation["color_sensor"]
         color_img = Image.fromarray(color_observation, mode="RGBA")
-        color_img.save(os.path.join(out_folder, "rgba_%05d.png" % frame_number))
+        color_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
 
     def save_semantic_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -147,7 +164,7 @@ class Generator:
         semantic_observation = observation["semantic_sensor"]
         semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
         semantic_img.putdata((semantic_observation.flatten()))
-        semantic_img.save(os.path.join(out_folder, "semantic_%05d.png" % frame_number))
+        semantic_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
 
     def save_depth_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -156,12 +173,19 @@ class Generator:
         depth_img = Image.fromarray(
             (depth_observation / 10 * 255).astype(np.uint8), mode="L"
         )
-        depth_img.save(os.path.join(out_folder, "depth_%05d.png" % frame_number))
+        depth_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
 
     def save_observations(self, observation, frame_number, out_folder, split_name):
         self.save_color_observation(observation, frame_number, os.path.join(out_folder, 'images', split_name))
         self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"))
         self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
+        
+    def update_dict(self, panoptic_dict, current_frame, out_folder, split_name):
+        pass
+    
+    def save_dict(self, panoptic_dict, out_folder, split_name):
+        with open(os.path.join(out_folder, 'annotation', f"panoptic_{split_name}.json"), 'w') as f:
+            json.dump(panoptic_dict, f)
 
     def generate(self, out_folder, split_name, frames_per_room=100):
         """Generates dataset at specified path.
@@ -193,7 +217,8 @@ class Generator:
         for scene in self._scenes:
             for room in self._scene_to_rooms[scene]:
                 total_frames += frames_per_room
-                
+        
+        panoptic_dict = create_panoptic_dict()        
         
         for scene in self._scenes:
             settings["scene"] = os.path.join(self._dataset_path, scene, "habitat", "mesh_semantic.ply")
@@ -223,11 +248,16 @@ class Generator:
                     
                     self.save_observations(observations, current_frame, out_folder, split_name)
                     
+                    self.update_dict(panoptic_dict, current_frame, out_folder, split_name)
+                    
                     print(f'Saved image {current_frame+1}/{total_frames}')
                     current_frame += 1
                     
             simulator.close()
+            
             del simulator
+        
+        self.save_dict(panoptic_dict, out_folder, split_name)    
             
 
 def main():
