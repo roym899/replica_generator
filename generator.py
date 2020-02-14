@@ -30,11 +30,33 @@ def create_panoptic_dict():
                              'contributor': '', 
                              'date_created': now.strftime('%Y-%m-%d %H:%M:%S.0')}
     
-    panoptic_dict['licenses'] = [] # TODO?
+    panoptic_dict['licenses'] = []
     panoptic_dict['images'] = []
     panoptic_dict['annotations'] = []
     panoptic_dict['categories'] = []
     return panoptic_dict
+
+def convert_categories(panoptic_dict, scene_dict):
+    """Add categories to panoptic dict COCO format based on scene semantic dict Replica format. 
+    """
+    
+    # define categories in replica considered as stuff
+    # TODO: is it a problem if there are two walls with different ids?? 
+    # if yes: add extra fixing step based on stuff categories to fix_semantic_observation
+    stuff_categories = [
+        'wall',
+        'ceiling',
+        'floor'
+    ]
+    
+    for scene_category in scene_dict['classes']:
+        panoptic_dict['categories'].append({
+            'supercategory': scene_category['name'],
+            'isthing': int(scene_category['name'] not in stuff_categories),
+            'id': scene_category['id'],
+            'name': scene_category['name']
+        })
+    
 
 def create_room(x_1, y_1, z_1, x_2, y_2, z_2):
     x_min = min(x_1, x_2)
@@ -319,6 +341,10 @@ class Generator:
             simulator.close()
             
             del simulator
+        
+        # We only use last scene_semantic_dict to add categories to panoptic dict as all replica dicts
+        # contain all classes indepdentend of the scene.
+        convert_categories(panoptic_dict, scene_semantic_dict)
         
         self.save_dict(panoptic_dict, out_folder, split_name)    
             
