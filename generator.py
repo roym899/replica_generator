@@ -215,9 +215,9 @@ class Generator:
             os.makedirs(out_folder)
         semantic_observation = self.fix_semantic_observation(observation["semantic_sensor"], scene_dict)
         semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
-        self._last_semantic_frame = np.array(semantic_img)
         semantic_img.putdata((semantic_observation.flatten()))
         semantic_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
+        self._last_semantic_frame = np.array(semantic_img)
 
     def save_depth_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -264,7 +264,7 @@ class Generator:
                 })
     
     def save_dict(self, panoptic_dict, out_folder, split_name):
-        with open(os.path.join(out_folder, 'annotation', f"panoptic_{split_name}.json"), 'w') as f:
+        with open(os.path.join(out_folder, 'annotations', f"panoptic_{split_name}.json"), 'w') as f:
             json.dump(panoptic_dict, f)
 
     def generate(self, out_folder, split_name, frames_per_room=100):
