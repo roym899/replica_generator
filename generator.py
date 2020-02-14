@@ -64,8 +64,12 @@ class Generator:
         
         self._scenes = ["apartment_1"]
         
-        self._height = 320
-        self._width = 240
+        self._height = 240
+        self._width = 320
+        
+        self._last_frame = None
+        self._last_depth_frame = None
+        self._last_semantic_frame = None
         
         self._scene_to_rooms = {
             "apartment_0": [
@@ -157,6 +161,24 @@ class Generator:
     @staticmethod
     def filename_from_frame_number(frame_number):
         return f"{frame_number:05d}.png"
+    
+    def load_scene_semantic_dict(self, scene):
+        with open(os.path.join(self._dataset_path, scene, 'habitat', 'info_semantic.json'), 'r') as f:
+            return json.load(f)
+        
+    def fix_semantic_observation(self, semantic_observation, scene_dict):
+        """Set id of negative categories to 0 to conform to COCO format.
+        
+        Replica *should* have no 0 id by default. If it does this code must probably be adjusted, except if 0 is undefined.
+        """
+        for id in np.unique(semantic_observation):
+            if scene_dict['id_to_label'][id] < 0:
+                semantic_observation[semantic_observation==id] = 0
+            elif scene_dict['id_to_label'][id] == 0:
+                print('Warning: unexpected id 0 occured, considered as unlabeled...')
+                print(scene_dict)
+                
+        return semantic_observation
 
     def save_color_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -164,12 +186,14 @@ class Generator:
         color_observation = observation["color_sensor"]
         color_img = Image.fromarray(color_observation, mode="RGBA")
         color_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
+        self._last_frame = np.array(color_img)
 
-    def save_semantic_observation(self, observation, frame_number, out_folder):
+    def save_semantic_observation(self, observation, frame_number, out_folder, scene_dict):
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
-        semantic_observation = observation["semantic_sensor"]
+        semantic_observation = self.fix_semantic_observation(observation["semantic_sensor"], scene_dict)
         semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
+        self._last_semantic_frame = np.array(semantic_img)
         semantic_img.putdata((semantic_observation.flatten()))
         semantic_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
 
@@ -181,19 +205,41 @@ class Generator:
             (depth_observation / 10 * 255).astype(np.uint8), mode="L"
         )
         depth_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
+        self._last_depth_frame = np.array(depth_img)
 
-    def save_observations(self, observation, frame_number, out_folder, split_name):
+    def save_observations(self, observation, frame_number, out_folder, split_name, scene_dict):
         self.save_color_observation(observation, frame_number, os.path.join(out_folder, 'images', split_name))
-        self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"))
+        self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"), scene_dict)
         self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
         
-    def update_dict(self, panoptic_dict, frame_number, out_folder, split_name):
+    def update_dict(self, panoptic_dict, scene_dict, frame_number, out_folder, split_name):
         panoptic_dict['images'].append({
             'file_name': self.filename_from_frame_number(frame_number),
             'height': self._height,
             'width': self._width,
             'id': frame_number
         })
+        
+        panoptic_dict['annotations'].append({
+            'segments_info': [],
+            'file_name': self.filename_from_frame_number(frame_number),
+            'image_id': frame_number
+        })
+        
+        for id in np.unique(self._last_semantic_frame):
+            label = scene_dict['id_to_label'][id]
+            mask = self._last_semantic_frame == id
+            xs, ys = np.nonzero(mask)
+            minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
+            
+            if label != 0: # == 0 would be undefined -> no annotation
+                panoptic_dict['annotations'][-1]['segments_info'].append({
+                    'id': int(id), # the number in the semantic image
+                    'category_id': int(label), # the matching category id 
+                    'iscrowd': 0, 
+                    'bbox': [int(minx),int(miny),int(maxx-minx),int(maxy-miny)], # x, y, (starting top left) width, height
+                    'area': int(np.sum(mask)) # area in pixels (exact, not bounding box)
+                })
     
     def save_dict(self, panoptic_dict, out_folder, split_name):
         with open(os.path.join(out_folder, 'annotation', f"panoptic_{split_name}.json"), 'w') as f:
@@ -233,10 +279,15 @@ class Generator:
         panoptic_dict = create_panoptic_dict()        
         
         for scene in self._scenes:
+            # setup the simulator
             settings["scene"] = os.path.join(self._dataset_path, scene, "habitat", "mesh_semantic.ply")
             cfg = make_cfg(settings)
             simulator = habitat_sim.Simulator(cfg)
             
+            # load semantic information for scene
+            scene_semantic_dict = self.load_scene_semantic_dict(scene)
+            
+            # generate data for each room
             for room in self._scene_to_rooms[scene]:
                 for _ in range(0,frames_per_room):
                     agent = simulator.get_agent(0)
@@ -258,9 +309,9 @@ class Generator:
                     # do the actual rendering
                     observations = simulator.get_sensor_observations()
                     
-                    self.save_observations(observations, current_frame, out_folder, split_name)
+                    self.save_observations(observations, current_frame, out_folder, split_name, scene_semantic_dict)
                     
-                    self.update_dict(panoptic_dict, current_frame, out_folder, split_name)
+                    self.update_dict(panoptic_dict, scene_semantic_dict, current_frame, out_folder, split_name)
                     
                     print(f'Saved image {current_frame+1}/{total_frames}')
                     current_frame += 1
@@ -283,13 +334,13 @@ def main():
     generator = Generator(path=args.dataset_folder)
     generator.generate(out_folder=args.output, 
                        split_name='train',
-                       frames_per_room=60)
+                       frames_per_room=6)
     generator.generate(out_folder=args.output, 
                        split_name='val',
-                       frames_per_room=20)
+                       frames_per_room=2)
     generator.generate(out_folder=args.output, 
                        split_name='test',
-                       frames_per_room=20)
+                       frames_per_room=2)
     
 if __name__ == "__main__":
     main()
