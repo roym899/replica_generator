@@ -231,7 +231,7 @@ class Generator:
 
     def save_observations(self, observation, frame_number, out_folder, split_name, scene_dict):
         self.save_color_observation(observation, frame_number, os.path.join(out_folder, 'images', split_name))
-        self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"), scene_dict)
+        self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotations', f"panoptic_{split_name}"), scene_dict)
         self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
         
     def update_dict(self, panoptic_dict, scene_dict, frame_number, out_folder, split_name):
@@ -271,8 +271,8 @@ class Generator:
         """Generates dataset at specified path.
         
         Resulting folder structure (same as COCO)
-        {out_folder}/annotation/panoptic_{split_name}/*.png
-        {out_folder}/annotation/panoptic_{split_name}.json
+        {out_folder}/annotations/panoptic_{split_name}/*.png
+        {out_folder}/annotations/panoptic_{split_name}.json
         
         {out_folder}/images/{split_name}/*.png
         
