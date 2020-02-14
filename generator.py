@@ -64,6 +64,9 @@ class Generator:
         
         self._scenes = ["apartment_1"]
         
+        self._height = 320
+        self._width = 240
+        
         self._scene_to_rooms = {
             "apartment_0": [
                 create_room(-0.3, 1.4, 2.8, 1.68, 0.28, 3.04), # bedroom
@@ -150,13 +153,17 @@ class Generator:
                 create_room(0.75, -1.13, 0.02, 4.22, -0.33, -1.15)
             ]
         }
+        
+    @staticmethod
+    def filename_from_frame_number(frame_number):
+        return f"{frame_number:05d}.png"
 
     def save_color_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
             os.makedirs(out_folder)
         color_observation = observation["color_sensor"]
         color_img = Image.fromarray(color_observation, mode="RGBA")
-        color_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
+        color_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
 
     def save_semantic_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -164,7 +171,7 @@ class Generator:
         semantic_observation = observation["semantic_sensor"]
         semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
         semantic_img.putdata((semantic_observation.flatten()))
-        semantic_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
+        semantic_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
 
     def save_depth_observation(self, observation, frame_number, out_folder):
         if not os.path.exists(out_folder):
@@ -173,15 +180,20 @@ class Generator:
         depth_img = Image.fromarray(
             (depth_observation / 10 * 255).astype(np.uint8), mode="L"
         )
-        depth_img.save(os.path.join(out_folder, "%05d.png" % frame_number))
+        depth_img.save(os.path.join(out_folder, self.filename_from_frame_number(frame_number)))
 
     def save_observations(self, observation, frame_number, out_folder, split_name):
         self.save_color_observation(observation, frame_number, os.path.join(out_folder, 'images', split_name))
         self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"))
         self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
         
-    def update_dict(self, panoptic_dict, current_frame, out_folder, split_name):
-        pass
+    def update_dict(self, panoptic_dict, frame_number, out_folder, split_name):
+        panoptic_dict['images'].append({
+            'file_name': self.filename_from_frame_number(frame_number),
+            'height': self._height,
+            'width': self._width,
+            'id': frame_number
+        })
     
     def save_dict(self, panoptic_dict, out_folder, split_name):
         with open(os.path.join(out_folder, 'annotation', f"panoptic_{split_name}.json"), 'w') as f:
@@ -204,8 +216,8 @@ class Generator:
         """
         settings = {}
         print(out_folder)
-        settings['width'] = 320
-        settings['height'] = 240
+        settings['width'] = self._width
+        settings['height'] = self._height
         settings["sensor_height"] = 0
         settings["color_sensor"] = True
         settings["depth_sensor"] = True
