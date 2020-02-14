@@ -45,6 +45,8 @@ class Generator:
                         "hotel_0", "office_0", "office_1", "office_2",
                         "office_3", "office_4", "room_0", "room_1", "room_2"]
         
+        self._scenes = ["apartment_1"]
+        
         self._scene_to_rooms = {
             "apartment_0": [
                 create_room(-0.3, 1.4, 2.8, 1.68, 0.28, 3.04), # bedroom
@@ -133,33 +135,48 @@ class Generator:
         }
 
     def save_color_observation(self, observation, frame_number, out_folder):
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
         color_observation = observation["color_sensor"]
         color_img = Image.fromarray(color_observation, mode="RGBA")
         color_img.save(os.path.join(out_folder, "rgba_%05d.png" % frame_number))
 
     def save_semantic_observation(self, observation, frame_number, out_folder):
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
         semantic_observation = observation["semantic_sensor"]
         semantic_img = Image.new("I", (semantic_observation.shape[1], semantic_observation.shape[0]))
         semantic_img.putdata((semantic_observation.flatten()))
         semantic_img.save(os.path.join(out_folder, "semantic_%05d.png" % frame_number))
 
     def save_depth_observation(self, observation, frame_number, out_folder):
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
         depth_observation = observation["depth_sensor"]
         depth_img = Image.fromarray(
             (depth_observation / 10 * 255).astype(np.uint8), mode="L"
         )
         depth_img.save(os.path.join(out_folder, "depth_%05d.png" % frame_number))
 
-    def save_observations(self, observation, frame_number, out_folder):
-        self.save_color_observation(observation, frame_number, out_folder)
-        self.save_semantic_observation(observation, frame_number, out_folder)
-        self.save_depth_observation(observation, frame_number, out_folder)
+    def save_observations(self, observation, frame_number, out_folder, split_name):
+        self.save_color_observation(observation, frame_number, os.path.join(out_folder, 'images', split_name))
+        self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotation', f"panoptic_{split_name}"))
+        self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
 
-    def generate(self, out_folder, frames_per_room=100):
+    def generate(self, out_folder, split_name, frames_per_room=100):
         """Generates dataset at specified path.
+        
+        Resulting folder structure (same as COCO)
+        {out_folder}/annotation/panoptic_{split_name}/*.png
+        {out_folder}/annotation/panoptic_{split_name}.json
+        
+        {out_folder}/images/{split_name}/*.png
+        
+        {out_folder}/depth/{split_name}/*.png (this is not in COCO)
         
         Args:
             out_folder: The folder to write the dataset to.
+            split_name: Subfolder name, i.e., train, val, test
         """
         settings = {}
         print(out_folder)
@@ -204,7 +221,7 @@ class Generator:
                     # do the actual rendering
                     observations = simulator.get_sensor_observations()
                     
-                    self.save_observations(observations, current_frame, out_folder)
+                    self.save_observations(observations, current_frame, out_folder, split_name)
                     
                     print(f'Saved image {current_frame+1}/{total_frames}')
                     current_frame += 1
@@ -222,7 +239,15 @@ def main():
     args = parser.parse_args()
 
     generator = Generator(path=args.dataset_folder)
-    generator.generate(out_folder=args.output)
+    generator.generate(out_folder=args.output, 
+                       split_name='train',
+                       frames_per_room=60)
+    generator.generate(out_folder=args.output, 
+                       split_name='val',
+                       frames_per_room=20)
+    generator.generate(out_folder=args.output, 
+                       split_name='test',
+                       frames_per_room=20)
     
 if __name__ == "__main__":
     main()
