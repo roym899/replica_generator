@@ -84,7 +84,7 @@ class Generator:
                         "hotel_0", "office_0", "office_1", "office_2",
                         "office_3", "office_4", "room_0", "room_1", "room_2"]
         
-        self._scenes = ["apartment_1"]
+        self._scenes = ["apartment_2"]
         
         self._height = 240
         self._width = 320
@@ -251,7 +251,7 @@ class Generator:
         for id in np.unique(self._last_semantic_frame):
             label = scene_dict['id_to_label'][id]
             mask = self._last_semantic_frame == id
-            xs, ys = np.nonzero(mask)
+            ys, xs = np.nonzero(mask)
             minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
             
             if label > 0: # == 0 would be undefined -> no annotation
