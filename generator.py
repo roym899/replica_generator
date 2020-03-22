@@ -84,8 +84,6 @@ class Generator:
                         "hotel_0", "office_0", "office_1", "office_2",
                         "office_3", "office_4", "room_0", "room_1", "room_2"]
         
-        self._scenes = ["apartment_2"]
-        
         self._height = 240
         self._width = 320
         
@@ -326,7 +324,7 @@ class Generator:
                     random_state.rotation = (quat_from_angle_axis(np.random.uniform(0,np.pi), np.array([0,1,0]))*
                                              quat_from_angle_axis(np.random.uniform(-np.pi/3,np.pi/16), np.array([1,0,0]))*
                                              quat_from_angle_axis(np.random.uniform(-np.pi/16,np.pi/16), np.array([0,0,1])))
-                    
+                    list(state.position)+list(state.rotation.components)
                     agent_state.sensor_states = {}
                     agent.set_state(random_state)
                     
@@ -362,13 +360,13 @@ def main():
     generator = Generator(path=args.dataset_folder)
     generator.generate(out_folder=args.output, 
                        split_name='train',
-                       frames_per_room=6)
+                       frames_per_room=200)
     generator.generate(out_folder=args.output, 
                        split_name='val',
-                       frames_per_room=2)
+                       frames_per_room=20)
     generator.generate(out_folder=args.output, 
                        split_name='test',
-                       frames_per_room=2)
+                       frames_per_room=20)
     
 if __name__ == "__main__":
     main()
