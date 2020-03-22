@@ -234,12 +234,14 @@ class Generator:
         self.save_semantic_observation(observation, frame_number, os.path.join(out_folder, 'annotations', f"panoptic_{split_name}"), scene_dict)
         self.save_depth_observation(observation, frame_number, os.path.join(out_folder, 'depth', split_name))
         
-    def update_dict(self, panoptic_dict, scene_dict, frame_number, out_folder, split_name):
+    def update_dict(self, panoptic_dict, scene_dict, frame_number, out_folder, split_name, scene, state):
         panoptic_dict['images'].append({
             'file_name': self.filename_from_frame_number(frame_number),
             'height': self._height,
             'width': self._width,
-            'id': frame_number
+            'id': frame_number,
+            'scene': scene,
+            'pose': list(state.position)+list(state.rotation.components)
         })
         
         panoptic_dict['annotations'].append({
@@ -333,7 +335,7 @@ class Generator:
                     
                     self.save_observations(observations, current_frame, out_folder, split_name, scene_semantic_dict)
                     
-                    self.update_dict(panoptic_dict, scene_semantic_dict, current_frame, out_folder, split_name)
+                    self.update_dict(panoptic_dict, scene_semantic_dict, current_frame, out_folder, split_name, scene, random_state)
                     
                     print(f'Saved image {current_frame+1}/{total_frames}')
                     current_frame += 1
